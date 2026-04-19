@@ -5,6 +5,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, User, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
+import confetti from 'canvas-confetti';
 
 interface TeacherFormProps {
   ownerId: string;
@@ -59,6 +60,13 @@ const TeacherForm: React.FC<TeacherFormProps> = ({ ownerId }) => {
         scores: normalizedScores,
         answers,
         createdAt: serverTimestamp(),
+      });
+
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#2D5DA1', '#4DA650', '#E53935', '#FBC02D']
       });
 
       setIsSubmitted(true);

@@ -53,8 +53,7 @@ const AdminPanel: React.FC = () => {
   );
 
   const handleDeleteResponse = async (e: React.MouseEvent, responseId: string) => {
-    e.stopPropagation(); // Prevent selecting the card when clicking delete
-    
+    e.stopPropagation();
     if (window.confirm('هل أنت متأكد من رغبتك في حذف هذه الاستجابة؟ لا يمكن التراجع عن هذا الإجراء.')) {
       try {
         await deleteDoc(doc(db, 'responses', responseId));
@@ -63,14 +62,13 @@ const AdminPanel: React.FC = () => {
         }
       } catch (error) {
         console.error('Error deleting document:', error);
-        alert('حدث خطأ أثناء محاولة الحذف.');
       }
     }
   };
 
   const getDominantQuadrant = (scores: ResponseData['scores']) => {
-    const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-    return sorted[0][0]; // Returns A, B, C, or D
+    const sorted = Object.entries(scores).sort((a, b) => (b[1] as number) - (a[1] as number));
+    return sorted[0][0]; 
   };
 
   const getQuadrantLabel = (q: string) => {
@@ -83,7 +81,7 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const quadrantDetails = {
+  const quadrantDetails: Record<string, any> = {
     A: {
       title: 'النمط (A) - تحليلي/موضوعي (يسار أعلى)',
       features: 'يهتم بالحقائق، الأرقام، التحليل المنطقي، والدراسات الدقيقة.',
@@ -126,6 +124,21 @@ const AdminPanel: React.FC = () => {
     },
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -137,12 +150,19 @@ const AdminPanel: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8" dir="rtl">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
           <h1 className="text-3xl font-bold text-slate-900 mb-2">لوحة تحكم المحلل</h1>
           <p className="text-slate-500">متابعة استمارات المعلمين وتحليل اللقطات الدماغية.</p>
-        </div>
+        </motion.div>
 
-        <div className="relative w-full md:w-80">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="relative w-full md:w-80"
+        >
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
           <input
             type="text"
@@ -151,7 +171,7 @@ const AdminPanel: React.FC = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pr-10 pl-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
           />
-        </div>
+        </motion.div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -171,8 +191,9 @@ const AdminPanel: React.FC = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => setSelectedResponse(res)}
+                  transition={{ duration: 0.2 }}
                   className={cn(
-                    "p-5 rounded-2xl border cursor-pointer transition-all duration-200 hover:shadow-md",
+                    "p-5 rounded-2xl border cursor-pointer transition-all duration-200 hover:shadow-md group",
                     selectedResponse?.id === res.id
                       ? "bg-indigo-600 border-indigo-600 text-white"
                       : "bg-white border-slate-100 hover:border-indigo-200"
@@ -229,13 +250,13 @@ const AdminPanel: React.FC = () => {
             {selectedResponse ? (
               <motion.div
                 key={selectedResponse.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
                 className="grid grid-cols-12 grid-rows-8 gap-4 min-h-[700px]"
               >
                 {/* Teacher Info Card */}
-                <div className="bento-card col-span-12 xl:col-span-4 xl:row-span-3">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-4 xl:row-span-3">
                   <div className="bento-title">بيانات المعلم</div>
                   <div className="space-y-3 mt-2">
                     <div className="flex justify-between border-b border-slate-50 pb-2">
@@ -251,18 +272,18 @@ const AdminPanel: React.FC = () => {
                       <span className="text-[14px] font-bold">{selectedResponse.teacherEmail || 'غير متوفر'}</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Main Chart Card */}
-                <div className="bento-card col-span-12 xl:col-span-5 xl:row-span-8 flex items-center justify-center relative">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-5 xl:row-span-8 flex items-center justify-center relative group">
                   <div className="bento-title absolute top-5 right-5">اللقطة الدماغية (Brain Shot)</div>
-                  <div className="w-full flex items-center justify-center mt-8">
+                  <div className="w-full flex items-center justify-center mt-8 transition-transform group-hover:scale-105 duration-500">
                     <HBDIChart scores={selectedResponse.scores} />
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Scores Card */}
-                <div className="bento-card col-span-12 xl:col-span-3 xl:row-span-4">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-3 xl:row-span-4">
                   <div className="bento-title">درجات الهيمنة</div>
                   <div className="space-y-4 mt-2">
                     {[
@@ -277,6 +298,7 @@ const AdminPanel: React.FC = () => {
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${item.value}%` }}
+                            transition={{ duration: 1, ease: "easeOut" }}
                             className={cn("h-full", item.color)}
                           />
                         </div>
@@ -284,14 +306,14 @@ const AdminPanel: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Traits Card */}
-                <div className="bento-card col-span-12 xl:col-span-4 xl:row-span-5 overflow-y-auto">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-4 xl:row-span-5 overflow-y-auto">
                   <div className="bento-title">السمات السلوكية لنمط {getDominantQuadrant(selectedResponse.scores)}</div>
                   <div className="space-y-4 mt-2">
                     <div className="flex flex-wrap gap-2">
-                      {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].traits.map((trait) => (
+                      {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].traits.map((trait: string) => (
                         <span key={trait} className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-[8px] text-[13px] font-medium border border-blue-100">
                           {trait}
                         </span>
@@ -305,7 +327,7 @@ const AdminPanel: React.FC = () => {
                           نقاط القوة:
                         </p>
                         <ul className="list-disc list-inside text-[13px] text-slate-600 space-y-1 pr-1">
-                          {(quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'] as any).strengths.map((s: string) => (
+                          {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].strengths.map((s: string) => (
                             <li key={s}>{s}</li>
                           ))}
                         </ul>
@@ -317,7 +339,7 @@ const AdminPanel: React.FC = () => {
                           نقاط الضعف المحتملة:
                         </p>
                         <ul className="list-disc list-inside text-[13px] text-slate-600 space-y-1 pr-1">
-                          {(quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'] as any).weaknesses.map((w: string) => (
+                          {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].weaknesses.map((w: string) => (
                             <li key={w}>{w}</li>
                           ))}
                         </ul>
@@ -331,10 +353,10 @@ const AdminPanel: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
-                {/* Notes Card - Analysis */}
-                <div className="bento-card col-span-12 xl:col-span-8 xl:row-span-4">
+                {/* Analysis Card */}
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-8 xl:row-span-4">
                   <div className="bento-title">تحليل النمط السائد والكلمات المفتاحية</div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
                     <div className="bg-[#fffaf0] p-4 rounded-[8px] border-r-4 border-[#ed8936] text-[14px]">
@@ -354,26 +376,26 @@ const AdminPanel: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Strategy Cards */}
-                <div className="bento-card col-span-12 xl:col-span-6 xl:row-span-4 overflow-hidden">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-6 xl:row-span-4 overflow-hidden">
                   <div className="bento-title">كيفية التعامل مع المعلم</div>
                   <div className="bg-slate-50 p-4 rounded-[8px] border border-slate-200 h-full overflow-y-auto">
                     <p className="text-[14px] text-slate-700 leading-relaxed">
                       {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].dealing}
                     </p>
                   </div>
-                </div>
+                </motion.div>
 
-                <div className="bento-card col-span-12 xl:col-span-6 xl:row-span-4 overflow-hidden">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-6 xl:row-span-4 overflow-hidden">
                   <div className="bento-title">التعزيز والتحفيز المناسب</div>
                   <div className="bg-green-50 p-4 rounded-[8px] border border-green-100 h-full overflow-y-auto">
                     <p className="text-[14px] text-green-800 leading-relaxed">
                       {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].reinforcement}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-slate-400 bg-white rounded-3xl border border-dashed border-slate-200 p-12 min-h-[400px]">
