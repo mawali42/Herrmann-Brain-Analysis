@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isValidResponse(data) {
+      return data.size() >= 5 &&
+             data.teacherName is string && data.teacherName.size() <= 200 &&
+             data.ownerId is string && data.ownerId.size() > 0 &&
+             data.scores is map &&
+             data.scores.A is number && data.scores.B is number &&
+             data.scores.C is number && data.scores.D is number;
+    }
+
+    match /responses/{responseId} {
+      // Anyone can create a response as long as it has a valid ownerId
+      allow create: if isValidResponse(request.resource.data) && 
+                    request.resource.data.createdAt == request.time;
+      
+      // Admin can only read responses that they OWN
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      
+      // Admin can delete their own records
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+  }
+}

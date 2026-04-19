@@ -1,0 +1,32 @@
+{
+  "entities": {
+    "Response": {
+      "title": "HBDI Response",
+      "description": "A teacher's response to the HBDI questionnaire linked to an admin",
+      "type": "object",
+      "properties": {
+        "teacherName": { "type": "string" },
+        "teacherEmail": { "type": "string" },
+        "ownerId": { "type": "string", "description": "The UID of the admin who owns this link" },
+        "scores": {
+          "type": "object",
+          "properties": {
+            "A": { "type": "number" },
+            "B": { "type": "number" },
+            "C": { "type": "number" },
+            "D": { "type": "number" }
+          }
+        },
+        "answers": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["teacherName", "scores", "ownerId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/responses/{responseId}": {
+      "schema": "Response",
+      "description": "Collection of HBDI responses from teachers associated with specific admins"
+    }
+  }
+}

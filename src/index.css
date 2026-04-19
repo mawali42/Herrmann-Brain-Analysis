@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-bento: #f0f2f5;
+  --color-card-bento: #ffffff;
+  --color-text-primary: #1a202c;
+  --color-text-secondary: #4a5568;
+  --color-accent-bento: #3182ce;
+  --color-quad-a: #2D5DA1;
+  --color-quad-b: #4DA650;
+  --color-quad-c: #E53935;
+  --color-quad-d: #FBC02D;
+  --color-border-bento: #e2e8f0;
+
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-bento text-text-primary antialiased;
+  }
+}
+
+.bento-card {
+  @apply bg-white rounded-[16px] border border-border-bento p-5 flex flex-col shadow-sm;
+}
+
+.bento-title {
+  @apply text-[16px] font-bold mb-3 flex items-center gap-2 text-text-secondary;
+}
+
+.bento-title::before {
+  content: '';
+  @apply w-1 h-4 bg-accent-bento rounded-[2px];
+}

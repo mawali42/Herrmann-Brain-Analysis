@@ -1,0 +1,6 @@
+{
+  "name": "Herrmann-Brain-Analysis",
+  "description": "منصة للمعلمين لتعبئة مقياس هيرمان (HBDI) مع لوحة تحكم خاصة للمحلل لعرض اللقطة الدماغية والتحليلات.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
