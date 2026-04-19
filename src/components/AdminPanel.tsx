@@ -148,32 +148,44 @@ const AdminPanel: React.FC = () => {
     
     setExporting(true);
     try {
+      // Small delay to ensure all animations are finished
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const element = reportRef.current;
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        logging: false,
-        backgroundColor: '#f8fafc', // match slate-50
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
+        logging: true, // helpful for some internal debugs in html2canvas
+        backgroundColor: '#f8fafc',
+        onclone: (clonedDoc) => {
+          // Ensure Arabic text direction is preserved in clone
+          const clonedElement = clonedDoc.getElementById('pdf-report-content');
+          if (clonedElement) {
+            clonedElement.style.direction = 'rtl';
+          }
+        }
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'p',
         unit: 'mm',
         format: 'a4',
       });
 
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      // If content is longer than A4, we'll just fit it or the user can print it
+      // Usually HBDI report fits well in one long page or standard A4
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       pdf.save(`تقرير_هيرمان_${selectedResponse.teacherName}.pdf`);
     } catch (error) {
       console.error('PDF export failed:', error);
-      alert('حدث خطأ أثناء تصدير الملف.');
+      alert('حدث خطأ أثناء تصدير الملف. يرجى التأكد من استقرار الاتصال والمحاولة مرة أخرى.');
     } finally {
       setExporting(false);
     }
@@ -291,6 +303,7 @@ const AdminPanel: React.FC = () => {
               <motion.div
                 key={selectedResponse.id}
                 ref={reportRef}
+                id="pdf-report-content"
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
