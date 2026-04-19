@@ -348,10 +348,10 @@ const AdminPanel: React.FC = () => {
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-12 grid-rows-8 gap-4 min-h-[700px] p-4 bg-slate-50 rounded-[32px]"
+                className="grid grid-cols-12 xl:grid-rows-12 gap-4 xl:min-h-[1000px] p-3 md:p-6 bg-slate-50 rounded-[24px] md:rounded-[32px]"
               >
                 {/* Teacher Info Card */}
-                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-4 xl:row-span-3">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 lg:col-span-6 xl:col-span-4 xl:row-span-3 h-fit xl:h-full">
                   <div className="flex justify-between items-start mb-2">
                     <div className="bento-title">بيانات المعلم</div>
                     <div className="flex items-center gap-2">
@@ -402,7 +402,7 @@ const AdminPanel: React.FC = () => {
                 </motion.div>
 
                 {/* Main Chart Card */}
-                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-5 xl:row-span-8 flex items-center justify-center relative group">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 lg:col-span-6 xl:col-span-5 xl:row-span-8 flex items-center justify-center relative group min-h-[400px] xl:min-h-0">
                   <div className="bento-title absolute top-5 right-5">اللقطة الدماغية (Brain Shot)</div>
                   <div className="w-full flex items-center justify-center mt-8 transition-transform group-hover:scale-105 duration-500">
                     <HBDIChart scores={selectedResponse.scores} />
@@ -410,7 +410,7 @@ const AdminPanel: React.FC = () => {
                 </motion.div>
 
                 {/* Scores Card */}
-                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-3 xl:row-span-4">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 lg:col-span-6 xl:col-span-3 xl:row-span-4 h-fit xl:h-full">
                   <div className="bento-title">درجات الهيمنة</div>
                   <div className="space-y-4 mt-2">
                     {[
@@ -436,7 +436,7 @@ const AdminPanel: React.FC = () => {
                 </motion.div>
 
                 {/* Traits Card */}
-                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-4 xl:row-span-5 overflow-y-auto">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 lg:col-span-6 xl:col-span-4 xl:row-span-5 h-fit xl:h-full overflow-y-auto">
                   <div className="bento-title">السمات السلوكية لنمط {getDominantQuadrant(selectedResponse.scores)}</div>
                   <div className="space-y-4 mt-2">
                     <div className="flex flex-wrap gap-2">
@@ -483,7 +483,7 @@ const AdminPanel: React.FC = () => {
                 </motion.div>
 
                 {/* Analysis Card */}
-                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-8 xl:row-span-4">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-8 xl:row-span-4 h-fit xl:h-full">
                   <div className="bento-title">تحليل النمط السائد والكلمات المفتاحية</div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
                     <div className="bg-[#fffaf0] p-4 rounded-[8px] border-r-4 border-[#ed8936] text-[14px]">
@@ -506,7 +506,7 @@ const AdminPanel: React.FC = () => {
                 </motion.div>
 
                 {/* Strategy Cards */}
-                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-6 xl:row-span-4 overflow-hidden">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 lg:col-span-6 xl:col-span-6 xl:row-span-4 overflow-hidden h-fit xl:h-full">
                   <div className="bento-title">كيفية التعامل مع المعلم</div>
                   <div className="bg-slate-50 p-4 rounded-[8px] border border-slate-200 h-full overflow-y-auto">
                     <p className="text-[14px] text-slate-700 leading-relaxed">
@@ -515,7 +515,7 @@ const AdminPanel: React.FC = () => {
                   </div>
                 </motion.div>
 
-                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-6 xl:row-span-4 overflow-hidden">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 lg:col-span-6 xl:col-span-6 xl:row-span-4 overflow-hidden h-fit xl:h-full">
                   <div className="bento-title">التعزيز والتحفيز المناسب</div>
                   <div className="bg-green-50 p-4 rounded-[8px] border border-green-100 h-full overflow-y-auto">
                     <p className="text-[14px] text-green-800 leading-relaxed">
@@ -525,7 +525,7 @@ const AdminPanel: React.FC = () => {
                 </motion.div>
 
                 {/* OSCAR Coaching Session Panel */}
-                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:row-span-6 overflow-hidden bg-white text-slate-900 border border-slate-200 shadow-xl">
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:row-span-10 overflow-hidden bg-white text-slate-900 border border-slate-200 shadow-xl h-fit">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-indigo-50 rounded-lg border border-indigo-100">
