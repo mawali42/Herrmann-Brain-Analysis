@@ -33,3 +33,33 @@
   content: '';
   @apply w-1 h-4 bg-accent-bento rounded-[2px];
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #pdf-report-content, #pdf-report-content * {
+    visibility: visible;
+  }
+  #pdf-report-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0 !important;
+    background: white !important;
+  }
+  .bento-card {
+    border: 1px solid #e2e8f0 !important;
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+  button {
+    display: none !important;
+  }
+  /* Hide search bar, list etc on print */
+  nav, header, .lg\:col-span-1 {
+    display: none !important;
+  }
+}

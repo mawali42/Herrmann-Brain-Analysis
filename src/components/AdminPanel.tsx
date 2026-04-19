@@ -2,11 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import { collection, query, orderBy, onSnapshot, Timestamp, where, deleteDoc, doc } from 'firebase/firestore';
 import HBDIChart from './HBDIChart';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Calendar, Brain, Search, List, Trash2, Download, Loader2 } from 'lucide-react';
+import { User, Calendar, Brain, Search, List, Trash2, Download, Loader2, Printer } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { cn } from '../lib/utils';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import * as htmlToImage from 'html-to-image';
 
 interface ResponseData {
   id: string;
@@ -148,47 +148,41 @@ const AdminPanel: React.FC = () => {
     
     setExporting(true);
     try {
-      // Small delay to ensure all animations are finished
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Ensure element is ready and visible
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       const element = reportRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: true, // helpful for some internal debugs in html2canvas
-        backgroundColor: '#f8fafc',
-        onclone: (clonedDoc) => {
-          // Ensure Arabic text direction is preserved in clone
-          const clonedElement = clonedDoc.getElementById('pdf-report-content');
-          if (clonedElement) {
-            clonedElement.style.direction = 'rtl';
-          }
-        }
+      
+      // Use htmlToImage which is better with SVGs and complex CSS
+      const dataUrl = await htmlToImage.toPng(element, {
+        quality: 1.0,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        width: element.offsetWidth,
+        height: element.offsetHeight,
       });
 
-      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'p',
-        unit: 'mm',
-        format: 'a4',
+        unit: 'px',
+        format: [element.offsetWidth, element.offsetHeight],
       });
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      // If content is longer than A4, we'll just fit it or the user can print it
-      // Usually HBDI report fits well in one long page or standard A4
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`تقرير_هيرمان_${selectedResponse.teacherName}.pdf`);
     } catch (error) {
       console.error('PDF export failed:', error);
-      alert('حدث خطأ أثناء تصدير الملف. يرجى التأكد من استقرار الاتصال والمحاولة مرة أخرى.');
+      alert('نعتذر، حدث خطأ تقني في إنشاء الملف. يمكنك تجربة تصغير نافذة المتصفح أو المحاولة من جهاز كمبيوتر لضمان أفضل توافق.');
     } finally {
       setExporting(false);
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   if (loading) {
@@ -313,23 +307,36 @@ const AdminPanel: React.FC = () => {
                 <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-4 xl:row-span-3">
                   <div className="flex justify-between items-start mb-2">
                     <div className="bento-title">بيانات المعلم</div>
-                    <button
-                      onClick={handleDownloadPDF}
-                      disabled={exporting}
-                      className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
-                    >
-                      {exporting ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          جاري التصدير...
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-3 h-3" />
-                          تحميل PDF
-                        </>
-                      )}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handlePrint}
+                        className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                        title="طباعة التقرير"
+                      >
+                        <Printer className="w-3 h-3" />
+                        طباعة
+                      </button>
+                      <button
+                        onClick={handleDownloadPDF}
+                        disabled={exporting}
+                        className={cn(
+                          "flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm",
+                          exporting && "opacity-75 cursor-wait"
+                        )}
+                      >
+                        {exporting ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            معالجة...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-3 h-3" />
+                            تحميل PDF
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-3 mt-2">
                     <div className="flex justify-between border-b border-slate-50 pb-2">
