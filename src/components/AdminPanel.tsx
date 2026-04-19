@@ -75,6 +75,13 @@ const AdminPanel: React.FC = () => {
     return sorted[0][0]; 
   };
 
+  const quadrantBriefs: Record<string, string> = {
+    A: 'تحليلي، منطقي، واقعي، ويهتم بالأرقام والحقائق.',
+    B: 'تنفيذي، منظم، دقيق، ويهتم بالتنفيذ والإجراءات والوقت.',
+    C: 'مشاعري، اجتماعي، حساس، ويهتم بالعلاقات والتواصل الإنساني.',
+    D: 'إبداعي، ابتكاري، شمولي، ويهتم بالرؤية المستقبلية والأفكار الجريئة.',
+  };
+
   const getQuadrantLabel = (q: string) => {
     switch (q) {
       case 'A': return 'النمط (A) - تحليلي/موضوعي';
@@ -248,11 +255,20 @@ const AdminPanel: React.FC = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex flex-col gap-1">
                       <h3 className="font-bold text-lg">{res.teacherName}</h3>
-                      <div className={cn(
-                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase w-fit",
-                        selectedResponse?.id === res.id ? "bg-white/20" : "bg-blue-50 text-accent-bento"
-                      )}>
-                        {getQuadrantLabel(getDominantQuadrant(res.scores))}
+                      <div className="relative group/tooltip w-fit">
+                        <div className={cn(
+                          "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase w-fit transition-colors",
+                          selectedResponse?.id === res.id ? "bg-white/20" : "bg-blue-50 text-accent-bento"
+                        )}>
+                          {getQuadrantLabel(getDominantQuadrant(res.scores))}
+                        </div>
+                        
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-slate-900 text-white text-[10px] rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 shadow-xl pointer-events-none border border-white/10 leading-relaxed">
+                          {quadrantBriefs[getDominantQuadrant(res.scores)]}
+                          {/* Tooltip Arrow */}
+                          <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-slate-900" />
+                        </div>
                       </div>
                     </div>
                     <button
