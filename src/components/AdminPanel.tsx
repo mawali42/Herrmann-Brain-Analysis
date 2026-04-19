@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, orderBy, onSnapshot, Timestamp, where } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp, where, deleteDoc, doc } from 'firebase/firestore';
 import HBDIChart from './HBDIChart';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Calendar, Brain, Search, List } from 'lucide-react';
+import { User, Calendar, Brain, Search, List, Trash2 } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { cn } from '../lib/utils';
 
@@ -52,6 +52,22 @@ const AdminPanel: React.FC = () => {
     r.teacherName.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleDeleteResponse = async (e: React.MouseEvent, responseId: string) => {
+    e.stopPropagation(); // Prevent selecting the card when clicking delete
+    
+    if (window.confirm('هل أنت متأكد من رغبتك في حذف هذه الاستجابة؟ لا يمكن التراجع عن هذا الإجراء.')) {
+      try {
+        await deleteDoc(doc(db, 'responses', responseId));
+        if (selectedResponse?.id === responseId) {
+          setSelectedResponse(null);
+        }
+      } catch (error) {
+        console.error('Error deleting document:', error);
+        alert('حدث خطأ أثناء محاولة الحذف.');
+      }
+    }
+  };
+
   const getDominantQuadrant = (scores: ResponseData['scores']) => {
     const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     return sorted[0][0]; // Returns A, B, C, or D
@@ -72,6 +88,8 @@ const AdminPanel: React.FC = () => {
       title: 'النمط (A) - تحليلي/موضوعي (يسار أعلى)',
       features: 'يهتم بالحقائق، الأرقام، التحليل المنطقي، والدراسات الدقيقة.',
       traits: ['عقلاني', 'واقعي', 'يفكر جيداً قبل التصرف', 'متحفظ'],
+      strengths: ['حل المشكلات المعقدة', 'التحليل المنطقي العميق', 'الدقة المتناهية في الحسابات', 'اتخاذ قرارات مبنية على الحقائق'],
+      weaknesses: ['قد يبدو بارداً أو غير عاطفي', 'التركيز المفرط على الأرقام وإهمال الجانب الإنساني', 'صعوبة في التعامل مع المواقف الغامضة'],
       keywords: 'أرقام، حقائق، منطق، تحليل، كفاءة، نتائج، دقة، أهداف ملموسة.',
       dealing: 'تحدث بلغة الأرقام والحقائق، تجنب العاطفة المفرطة في الحوار المهني، قدم أدلة وبراهين واضحة، وكن مباشراً وموضوعياً في طلباتك.',
       reinforcement: 'التقدير المبني على الإنجاز الرقمي والنتائج الملموسة، الثناء على مهارته التحليلية والدقة، وتوفير مصادر بيانات ومراجع قوية له.',
@@ -80,6 +98,8 @@ const AdminPanel: React.FC = () => {
       title: 'النمط (B) - تنفيذي/إجرائي (يسار أسفل)',
       features: 'يركز على التخطيط، الإجراءات، التنفيذ، والالتزام بالوقت.',
       traits: ['دقيق', 'منظم', 'عملي', 'روتيني', 'منضبط'],
+      strengths: ['التنظيم الفائق', 'الالتزام الصارم بالمواعيد', 'تحويل الخطط إلى واقع ملموس', 'تطبيق اللوائح والأنظمة بدقة'],
+      weaknesses: ['المقاومة الشديدة للتغيير المفاجئ', 'التمسك المفرط بالروتين', 'الارتباك عند غياب التعليمات الواضحة'],
       keywords: 'تنظيم، خطة، خطوات، ترتيب، انضباط، أمان، إجراءات، روتين.',
       dealing: 'التزم بالمواعيد بدقة، قدم تعليمات مكتوبة وواضحة، احترم النظام المدرسي، وتجنب التغييرات المفاجئة في الجدول الدراسي.',
       reinforcement: 'الثناء على دقة التنظيم والانضباط، منحه مسؤوليات إدارية تتطلب دقة، والتقدير العالي لالتزامه باللوائح والخطط الزمنية.',
@@ -88,6 +108,8 @@ const AdminPanel: React.FC = () => {
       title: 'النمط (C) - مشاعري/تواصلي (يمين أسفل)',
       features: 'يركز على العلاقات مع الآخرين، المشاعر، والتعبير.',
       traits: ['عاطفي', 'اجتماعي', 'حساس', 'متعاون'],
+      strengths: ['بناء علاقات إيجابية قوية', 'العمل الجماعي وروح الفريق', 'فهم مشاعر واحتياجات الآخرين', 'التحفيز المعنوي للزملاء والطلاب'],
+      weaknesses: ['تأثره الشديد بالانتقادات الشخصية', 'صعوبة في اتخاذ قرارات حازمة قد تزعج الآخرين', 'التركيز على المشاعر أكثر من النتائج أحياناً'],
       keywords: 'مشاعر، تشجيع، فريق، مشاركة، دعم، تعاون، علاقات، تواصل.',
       dealing: 'استخدم نبرة صوت ودودة، اهتم بالجانب الإنساني والاجتماعي، ركز على العمل الجماعي، وقدم التغذية الراجعة بشكل شخصي ولطيف.',
       reinforcement: 'الكلمات التحفيزية العلنية، شهادات التقدير المعنوية، تعزيز روح الفريق، وتوفير بيئة عمل يسودها الود والتفاعل الاجتماعي.',
@@ -96,6 +118,8 @@ const AdminPanel: React.FC = () => {
       title: 'النمط (D) - إبداعي/استراتيجي (يمين أعلى)',
       features: 'يهتم بالتخيل، النظرة الشمولية، والابتكار.',
       traits: ['مبدع', 'مبادر', 'رؤية مستقبلية', 'مغامر'],
+      strengths: ['التفكير خارج الصندوق', 'الرؤية الاستراتيجية البعيدة', 'القدرة على الابتكار وإيجاد حلول غير تقليدية', 'المرونة العالية في التعامل مع التغيير'],
+      weaknesses: ['إهمال التفاصيل الدقيقة والروتينية', 'القفز من فكرة لأخرى قبل إتمام الأولى', 'صعوبة في الالتزام بالخطط الزمنية الصارمة'],
       keywords: 'إبداع، ابتكار، رؤية، تجربة، حرية، مرونة، مشاريع، تغيير.',
       dealing: 'أعطه مساحة واسعة للإبداع، شجع أفكاره الجريئة وغير التقليدية، ركز على الأهداف الكبرى والنتائج النهائية، ولا تقيده بالتفاصيل الروتينية المملة.',
       reinforcement: 'منحه الحرية في تصميم وتطوير طرق التدريس، التقدير العلني لأفكاره المبتكرة، وتكليفه بقيادة مشاريع تطويرية تجريبية.',
@@ -155,13 +179,27 @@ const AdminPanel: React.FC = () => {
                   )}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg">{res.teacherName}</h3>
-                    <div className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                      selectedResponse?.id === res.id ? "bg-white/20" : "bg-blue-50 text-accent-bento"
-                    )}>
-                      {getQuadrantLabel(getDominantQuadrant(res.scores))}
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-bold text-lg">{res.teacherName}</h3>
+                      <div className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase w-fit",
+                        selectedResponse?.id === res.id ? "bg-white/20" : "bg-blue-50 text-accent-bento"
+                      )}>
+                        {getQuadrantLabel(getDominantQuadrant(res.scores))}
+                      </div>
                     </div>
+                    <button
+                      onClick={(e) => handleDeleteResponse(e, res.id)}
+                      className={cn(
+                        "p-2 rounded-lg transition-colors",
+                        selectedResponse?.id === res.id
+                          ? "text-white/60 hover:text-white hover:bg-white/10"
+                          : "text-slate-300 hover:text-rose-600 hover:bg-rose-50"
+                      )}
+                      title="حذف"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                   <div className="flex items-center gap-4 text-xs opacity-80">
                     <span className="flex items-center gap-1">
@@ -249,22 +287,49 @@ const AdminPanel: React.FC = () => {
                 </div>
 
                 {/* Traits Card */}
-                <div className="bento-card col-span-12 xl:col-span-4 xl:row-span-5">
+                <div className="bento-card col-span-12 xl:col-span-4 xl:row-span-5 overflow-y-auto">
                   <div className="bento-title">السمات السلوكية لنمط {getDominantQuadrant(selectedResponse.scores)}</div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].traits.map((trait) => (
-                      <span key={trait} className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-[8px] text-[13px] font-medium border border-blue-100">
-                        {trait}
-                      </span>
-                    ))}
-                    {selectedResponse.scores.A > 70 && <span className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-[8px] text-[13px] font-medium border border-indigo-100">دقة حسابية عالية</span>}
-                    {selectedResponse.scores.D > 70 && <span className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-[8px] text-[13px] font-medium border border-indigo-100">ابتكار وتطوير</span>}
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-slate-50">
-                    <p className="text-[12px] font-bold text-text-secondary mb-1">الخصائص الرئيسية:</p>
-                    <p className="text-[13px] text-text-secondary leading-relaxed">
-                      {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].features}
-                    </p>
+                  <div className="space-y-4 mt-2">
+                    <div className="flex flex-wrap gap-2">
+                      {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].traits.map((trait) => (
+                        <span key={trait} className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-[8px] text-[13px] font-medium border border-blue-100">
+                          {trait}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-[12px] font-bold text-green-700 mb-1 flex items-center gap-1">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          نقاط القوة:
+                        </p>
+                        <ul className="list-disc list-inside text-[13px] text-slate-600 space-y-1 pr-1">
+                          {(quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'] as any).strengths.map((s: string) => (
+                            <li key={s}>{s}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div>
+                        <p className="text-[12px] font-bold text-rose-700 mb-1 flex items-center gap-1">
+                          <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
+                          نقاط الضعف المحتملة:
+                        </p>
+                        <ul className="list-disc list-inside text-[13px] text-slate-600 space-y-1 pr-1">
+                          {(quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'] as any).weaknesses.map((w: string) => (
+                            <li key={w}>{w}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-50">
+                      <p className="text-[12px] font-bold text-text-secondary mb-1">الخصائص الرئيسية:</p>
+                      <p className="text-[13px] text-text-secondary leading-relaxed">
+                        {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].features}
+                      </p>
+                    </div>
                   </div>
                 </div>
 

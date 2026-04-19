@@ -180,14 +180,14 @@ const TeacherForm: React.FC<TeacherFormProps> = ({ ownerId }) => {
                               key={val}
                               onClick={() => handleAnswer(q.id, val)}
                               className={cn(
-                                "flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2",
+                                "flex flex-col items-center justify-center p-2 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all gap-1 sm:gap-2",
                                 answers[q.id] === val
                                   ? "bg-blue-50 border-accent-bento text-blue-700 shadow-inner"
                                   : "border-slate-100 hover:border-slate-300 bg-white text-slate-400 hover:bg-slate-50"
                               )}
                             >
                               <span className="text-lg font-bold">{val}</span>
-                              <span className="text-[10px] hidden md:block">
+                              <span className="text-[9px] sm:text-[10px] leading-tight text-center">
                                 {val === 1 ? 'لا ينطبق' : val === 5 ? 'ينطبق جداً' : ''}
                               </span>
                             </button>
