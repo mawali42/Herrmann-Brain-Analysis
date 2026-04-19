@@ -82,6 +82,37 @@ const AdminPanel: React.FC = () => {
     D: 'إبداعي، ابتكاري، شمولي، ويهتم بالرؤية المستقبلية والأفكار الجريئة.',
   };
 
+  const oscarQuestions: Record<string, { o: string[]; s: string[]; c: string[]; a: string[]; r: string[] }> = {
+    A: {
+      o: ['ما هي الأهداف الرقمية المحددة التي تريد تحقيقها؟', 'كيف ستقيس النجاح بشكل موضوعي؟'],
+      s: ['ما هي الحقائق والبيانات المتوفرة لديك حالياً؟', 'أين تكمن الفجوة المنطقية في الأداء؟'],
+      c: ['ما هي البدائل المتاحة بناءً على تحليل التكلفة والجهد؟', 'ما هي النتائج المتوقعة لكل خيار؟'],
+      a: ['ما هي الخطوات العملية المحددة والقابلة للقياس؟', 'ما هي الموارد التقنية أو المعرفية التي تحتاجها؟'],
+      r: ['كيف سنقوم بمراجعة مؤشرات الأداء (KPIs)؟', 'ما هو الجدول الزمني للتدقيق في النتائج؟'],
+    },
+    B: {
+      o: ['ما هو النموذج التنظيمي المثالي الذي تصبو إليه؟', 'ما هو الموعد النهائي المحدد للإنجاز؟'],
+      s: ['ما هي الإجراءات الحالية المتبعة؟', 'ما هي العقبات التنظيمية التي تواجهك؟'],
+      c: ['ما هي الخيارات التي تلتزم باللوائح والأنظمة؟', 'كيف ستؤثر الخيارات على سير العمل الروتيني؟'],
+      a: ['ما هي القائمة المرجعية (Checklist) للخطوات القادمة؟', 'كيف ستوزع المهام وفق الجدول الزمني؟'],
+      r: ['متى سيكون موعد المتابعة القادم للتأكد من الانضباط؟', 'كيف ستضمن استمرارية الالتزام بالخطة؟'],
+    },
+    C: {
+      o: ['كيف سيكون شعورك وشعور الفريق عند تحقيق الهدف؟', 'كيف سيؤثر هذا التغيير على العلاقات في المدرسة؟'],
+      s: ['كيف يرى الزملاء أو الطلاب الموقف الحالي؟', 'ما هي مشاعرك تجاه التحديات التي تواجهها؟'],
+      c: ['ما هي الخيارات التي تحظى بدعم وتعاون الجميع؟', 'كيف سنراعي الجوانب الإنسانية في كل قرار؟'],
+      a: ['من هم الأشخاص الذين تحتاج لدعمهم أو مشاركتهم؟', 'كيف ستقدم التغذية الراجعة للفريق بشكل إيجابي؟'],
+      r: ['كيف سنحتفل معاً بتحقيق هذا الإنجاز؟', 'ما هو تصورك للمتابعة القائمة على التواصل والدعم المستمر؟'],
+    },
+    D: {
+      o: ['ارسم لي هدف حصتك.. ما المميز في هذه الرسمة؟', 'صف الهدف المثالي الذي كنت تستطيع تحقيقه؟'],
+      s: ['ارسم Storyboard توضح مجريات الحصة وحدد الموقف الأنجح.', 'ما هي المساحة الإبداعية التي لم تُستغل بعد؟'],
+      c: ['ارسم مجموعة أسهم توضح بدائلك المبتكرة وغير التقليدية.', 'قم بعمل خارطة ذهنية توضح كل بديل وتخيل نتائجه.'],
+      a: ['ادمج مهاراتك مع البديل الأنسب وحدد الخطوة التالية.', 'من تحب أن يشاركك أو يجعلك ملتزماً بتنفيذ هذه الفكرة؟'],
+      r: ['ارسم سلماً متدرجاً يوضح خطتك في متابعة هذا الابتكار.', 'هل تعتقد أن عرض نجاحك على التواصل الاجتماعي سيكون حافزاً لك؟'],
+    },
+  };
+
   const getQuadrantLabel = (q: string) => {
     switch (q) {
       case 'A': return 'النمط (A) - تحليلي/موضوعي';
@@ -489,6 +520,62 @@ const AdminPanel: React.FC = () => {
                   <div className="bg-green-50 p-4 rounded-[8px] border border-green-100 h-full overflow-y-auto">
                     <p className="text-[14px] text-green-800 leading-relaxed">
                       {quadrantDetails[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'].reinforcement}
+                    </p>
+                  </div>
+                </motion.div>
+
+                {/* OSCAR Coaching Session Panel */}
+                <motion.div variants={itemVariants} className="bento-card col-span-12 xl:row-span-6 overflow-hidden bg-white text-slate-900 border border-slate-200 shadow-xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-50 rounded-lg border border-indigo-100">
+                        <Brain className="w-6 h-6 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-900">تطبيق منهجية أوسكار (OSCAR) الدولية</h2>
+                        <p className="text-slate-500 text-xs">نموذج عالمي مخصص لجلسات التوجيه التربوي الفعال</p>
+                      </div>
+                    </div>
+                    <div className="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-xl text-xs font-bold text-indigo-700">
+                      توجيه مخصص: {getQuadrantLabel(getDominantQuadrant(selectedResponse.scores))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-2">
+                    {[
+                      { key: 'o', label: 'O - Outcome', sub: 'المخرج النهائي', bg: 'bg-rose-50/50', border: 'border-rose-100', text: 'text-rose-700' },
+                      { key: 's', label: 'S - Situation', sub: 'الوضع الحالي', bg: 'bg-amber-50/50', border: 'border-amber-100', text: 'text-amber-700' },
+                      { key: 'c', label: 'C - Choices', sub: 'الخيارات والنتائج', bg: 'bg-emerald-50/50', border: 'border-emerald-100', text: 'text-emerald-700' },
+                      { key: 'a', label: 'A - Actions', sub: 'الخطة المستقبلية', bg: 'bg-blue-50/50', border: 'border-blue-100', text: 'text-blue-700' },
+                      { key: 'r', label: 'R - Review', sub: 'المراجعة والمتابعة', bg: 'bg-indigo-50/50', border: 'border-indigo-100', text: 'text-indigo-700' },
+                    ].map((step) => {
+                      const questions = oscarQuestions[getDominantQuadrant(selectedResponse.scores) as 'A'|'B'|'C'|'D'][step.key as 'o'|'s'|'c'|'a'|'r'];
+                      return (
+                        <div key={step.key} className={cn("p-5 rounded-2xl border flex flex-col gap-4 transition-all hover:bg-white hover:shadow-md group/card", step.bg, step.border)}>
+                          <div className="flex flex-col gap-1">
+                            <div className={cn("text-[14px] font-black tracking-tighter uppercase", step.text)}>
+                              {step.label}
+                            </div>
+                            <div className="text-[11px] font-bold text-slate-500 italic">
+                              {step.sub}
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            {questions.map((q, idx) => (
+                              <p key={idx} className="text-[14px] text-slate-900 font-bold leading-relaxed border-r-2 border-slate-200 pr-3 group-hover/card:border-indigo-400 transition-colors">
+                                {q}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-start gap-4">
+                    <div className="bg-indigo-600 text-white p-2 rounded-lg font-bold text-sm shrink-0">معلومة منهجية</div>
+                    <p className="text-sm text-slate-600 leading-relaxed font-bold">
+                      تتكامل **منهجية OSCAR** مع **مقياس هيرمان** لضمان أن الأسئلة المطروحة تحاكي "اللغة الدماغية" المفضلة للمعلم. استخدام هذه الأسئلة يقلل من المقاومة الطبيعية للتغيير ويرفع من دافعية المعلم للتطوير الذاتي.
                     </p>
                   </div>
                 </motion.div>
