@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { collection, query, orderBy, onSnapshot, Timestamp, where, deleteDoc, doc } from 'firebase/firestore';
 import HBDIChart from './HBDIChart';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Calendar, Brain, Search, List, Trash2 } from 'lucide-react';
+import { User, Calendar, Brain, Search, List, Trash2, Download, Loader2 } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { cn } from '../lib/utils';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface ResponseData {
   id: string;
@@ -24,7 +26,9 @@ const AdminPanel: React.FC = () => {
   const [responses, setResponses] = useState<ResponseData[]>([]);
   const [selectedResponse, setSelectedResponse] = useState<ResponseData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState('');
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -139,6 +143,42 @@ const AdminPanel: React.FC = () => {
     show: { opacity: 1, y: 0 }
   };
 
+  const handleDownloadPDF = async () => {
+    if (!reportRef.current || !selectedResponse) return;
+    
+    setExporting(true);
+    try {
+      const element = reportRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#f8fafc', // match slate-50
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`تقرير_هيرمان_${selectedResponse.teacherName}.pdf`);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('حدث خطأ أثناء تصدير الملف.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -250,14 +290,34 @@ const AdminPanel: React.FC = () => {
             {selectedResponse ? (
               <motion.div
                 key={selectedResponse.id}
+                ref={reportRef}
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-12 grid-rows-8 gap-4 min-h-[700px]"
+                className="grid grid-cols-12 grid-rows-8 gap-4 min-h-[700px] p-4 bg-slate-50 rounded-[32px]"
               >
                 {/* Teacher Info Card */}
                 <motion.div variants={itemVariants} className="bento-card col-span-12 xl:col-span-4 xl:row-span-3">
-                  <div className="bento-title">بيانات المعلم</div>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="bento-title">بيانات المعلم</div>
+                    <button
+                      onClick={handleDownloadPDF}
+                      disabled={exporting}
+                      className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                    >
+                      {exporting ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          جاري التصدير...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-3 h-3" />
+                          تحميل PDF
+                        </>
+                      )}
+                    </button>
+                  </div>
                   <div className="space-y-3 mt-2">
                     <div className="flex justify-between border-b border-slate-50 pb-2">
                       <span className="text-[13px] text-text-secondary">اسم المعلم:</span>
