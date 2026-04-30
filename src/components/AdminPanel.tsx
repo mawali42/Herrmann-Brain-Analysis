@@ -2,11 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import { collection, query, orderBy, onSnapshot, Timestamp, where, deleteDoc, doc } from 'firebase/firestore';
 import HBDIChart from './HBDIChart';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Calendar, Brain, Search, List, Trash2, Download, Loader2, Printer } from 'lucide-react';
+import { User, Calendar, Brain, Search, List, Trash2, Download, Loader2, Printer, FileText, BarChart3, CheckSquare } from 'lucide-react';
 import { auth, db } from '../lib/firebase';
 import { cn } from '../lib/utils';
 import jsPDF from 'jspdf';
 import * as htmlToImage from 'html-to-image';
+import { questions } from '../data/questions';
 
 interface ResponseData {
   id: string;
@@ -25,6 +26,7 @@ interface ResponseData {
 const AdminPanel: React.FC = () => {
   const [responses, setResponses] = useState<ResponseData[]>([]);
   const [selectedResponse, setSelectedResponse] = useState<ResponseData | null>(null);
+  const [viewType, setViewType] = useState<'analysis' | 'form'>('analysis');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState('');
@@ -218,7 +220,7 @@ const AdminPanel: React.FC = () => {
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`تقرير_هيرمان_${selectedResponse.teacherName}.pdf`);
+      pdf.save(`${viewType === 'analysis' ? 'تحليل' : 'استمارة'}_هيرمان_${selectedResponse.teacherName}.pdf`);
     } catch (error) {
       console.error('PDF export failed:', error);
       alert('نعتذر، حدث خطأ تقني في إنشاء الملف. يمكنك تجربة تصغير نافذة المتصفح أو المحاولة من جهاز كمبيوتر لضمان أفضل توافق.');
@@ -345,19 +347,48 @@ const AdminPanel: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* Detailed Analysis */}
+        {/* Detailed Analysis / Form Header Toggle */}
         <div className="lg:col-span-2">
           <AnimatePresence mode="wait">
             {selectedResponse ? (
-              <motion.div
-                key={selectedResponse.id}
-                ref={reportRef}
-                id="pdf-report-content"
-                variants={containerVariants}
-                initial="hidden"
-                animate="show"
-                className="grid grid-cols-12 xl:grid-rows-12 gap-4 xl:min-h-[1000px] p-3 md:p-6 bg-slate-50 rounded-[24px] md:rounded-[32px]"
-              >
+              <div className="space-y-6">
+                <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-fit mb-4">
+                  <button
+                    onClick={() => setViewType('analysis')}
+                    className={cn(
+                      "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+                      viewType === 'analysis'
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
+                        : "text-slate-500 hover:bg-slate-50"
+                    )}
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    تحليل النتائج
+                  </button>
+                  <button
+                    onClick={() => setViewType('form')}
+                    className={cn(
+                      "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+                      viewType === 'form'
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
+                        : "text-slate-500 hover:bg-slate-50"
+                    )}
+                  >
+                    <FileText className="w-4 h-4" />
+                    الاستمارة الأصلية
+                  </button>
+                </div>
+
+                {viewType === 'analysis' ? (
+                  <motion.div
+                    key="analysis-view"
+                    ref={reportRef}
+                    id="pdf-report-content"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="show"
+                    className="grid grid-cols-12 xl:grid-rows-12 gap-4 xl:min-h-[1000px] p-3 md:p-6 bg-slate-50 rounded-[24px] md:rounded-[32px]"
+                  >
                 {/* Teacher Info Card */}
                 <motion.div variants={itemVariants} className="bento-card col-span-12 lg:col-span-6 xl:col-span-4 xl:row-span-3 h-fit xl:h-full">
                   <div className="flex justify-between items-start mb-2">
@@ -615,6 +646,138 @@ const AdminPanel: React.FC = () => {
                   </div>
                 </motion.div>
               </motion.div>
+            ) : (
+                  <motion.div
+                    key="form-view"
+                    ref={reportRef}
+                    id="pdf-form-content"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="show"
+                    className="space-y-6 bg-white p-6 md:p-10 rounded-[24px] md:rounded-[32px] border border-slate-100 shadow-sm"
+                  >
+                    {/* Form Header */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-8 border-b border-slate-100">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <CheckSquare className="w-8 h-8 text-indigo-600" />
+                          <h2 className="text-3xl font-black text-slate-900">سجل إجابات المعلم</h2>
+                        </div>
+                        <p className="text-slate-500 font-medium">الاستمارة الأصلية واللقطة الدماغية للمعلم: {selectedResponse.teacherName}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={handlePrint}
+                          className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-3 rounded-xl text-[13px] font-bold transition-all"
+                        >
+                          <Printer className="w-4 h-4" />
+                          طباعة
+                        </button>
+                        <button
+                          onClick={handleDownloadPDF}
+                          disabled={exporting}
+                          className={cn(
+                            "flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl text-[13px] font-bold transition-all shadow-lg shadow-indigo-100",
+                            exporting && "opacity-75 cursor-wait"
+                          )}
+                        >
+                          {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                          تنزيل الاستمارة (PDF)
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Snapshot Summary */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-8 items-center bg-slate-50/50 rounded-3xl p-6 border border-slate-50">
+                      <div className="flex justify-center flex-col items-center">
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 bg-white px-4 py-1.5 rounded-full border border-slate-100 shadow-sm">اللقطة الدماغية الخاصة بالاستمارة</span>
+                        <HBDIChart scores={selectedResponse.scores} />
+                      </div>
+                      <div className="space-y-6">
+                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                          <h4 className="text-sm font-black text-slate-400 uppercase tracking-wider mb-4">ملخص البيانات</h4>
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-500 font-medium">الاسم:</span>
+                              <span className="font-bold text-slate-900">{selectedResponse.teacherName}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-500 font-medium">البريد:</span>
+                              <span className="font-bold text-slate-900">{selectedResponse.teacherEmail || '---'}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-500 font-medium">تاريخ الإرسال:</span>
+                              <span className="font-bold text-slate-900">{selectedResponse.createdAt?.toDate().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-2 border-t border-slate-50">
+                              <span className="text-slate-500 font-medium">النمط السائد:</span>
+                              <span className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-bold">{getQuadrantLabel(getDominantQuadrant(selectedResponse.scores))}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          {Object.entries(selectedResponse.scores).map(([q, s]) => (
+                            <div key={q} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                              <div className="text-[10px] font-black text-slate-400 mb-1">الدرجة ({q})</div>
+                              <div className="text-xl font-black text-slate-900">{Math.round(s as number)}%</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Detailed Questions & Answers */}
+                    <div className="pt-8">
+                      <div className="flex items-center gap-2 mb-8 bg-indigo-50/50 w-fit px-4 py-2 rounded-full border border-indigo-100/50">
+                        <List className="w-4 h-4 text-indigo-600" />
+                        <h3 className="text-sm font-black text-indigo-700">تفاصيل الإجابات على الـ 56 عبارة</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                        {questions.map((q, idx) => (
+                          <div key={q.id} className="group flex items-start gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                            <span className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-slate-100 text-slate-500 text-xs font-black rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                              {idx + 1}
+                            </span>
+                            <div className="flex-grow space-y-2">
+                              <p className="text-[14px] text-slate-700 font-medium leading-relaxed group-hover:text-slate-900 transition-colors">
+                                {q.text}
+                              </p>
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-1.5 font-bold">
+                                  {[1, 2, 3, 4, 5].map((val) => (
+                                    <div
+                                      key={val}
+                                      className={cn(
+                                        "w-6 h-6 rounded-md flex items-center justify-center text-[10px] transition-all",
+                                        selectedResponse.answers[q.id] === val
+                                          ? "bg-indigo-600 text-white scale-110 shadow-md shadow-indigo-100"
+                                          : "bg-slate-100 text-slate-400 opacity-40"
+                                      )}
+                                    >
+                                      {val}
+                                    </div>
+                                  ))}
+                                </div>
+                                <span className={cn(
+                                  "text-[10px] font-black uppercase px-2 py-0.5 rounded-md",
+                                  q.quadrant === 'A' ? "bg-blue-100 text-blue-700" :
+                                  q.quadrant === 'B' ? "bg-green-100 text-green-700" :
+                                  q.quadrant === 'C' ? "bg-red-100 text-red-700" :
+                                  "bg-yellow-100 text-yellow-700"
+                                )}>
+                                  النمط {q.quadrant}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-slate-400 bg-white rounded-3xl border border-dashed border-slate-200 p-12 min-h-[400px]">
                 <Brain className="w-16 h-16 mb-4 opacity-20" />

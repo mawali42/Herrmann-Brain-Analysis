@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import TeacherForm from './components/TeacherForm';
 import AdminPanel from './components/AdminPanel';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, BookOpen, LogOut, Link as LinkIcon, User as UserIcon, Brain } from 'lucide-react';
+import { Shield, BookOpen, LogOut, Link as LinkIcon, User as UserIcon, Brain, Loader2 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
@@ -28,12 +28,26 @@ export default function App() {
     return () => unsub();
   }, []);
 
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   const handleLogin = async () => {
+    setIsLoggingIn(true);
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login failed", err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setIsLoggingIn(false);
+        return;
+      }
+      if (err.code === 'auth/popup-blocked') {
+        alert('تم حظر النافذة المنبثقة! يرجى السماح بالنوافذ المنبثقة في متصفحك (Popup Blocker) ثم حاول مرة أخرى.');
+      } else {
+        alert('فشل تسجيل الدخول: ' + (err.message || 'خطأ غير معروف'));
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -157,11 +171,23 @@ export default function App() {
               </p>
               <button
                 onClick={handleLogin}
-                className="bg-accent-bento hover:bg-blue-700 text-white px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl shadow-blue-200 flex items-center gap-3 mx-auto"
+                disabled={isLoggingIn}
+                className={cn(
+                  "bg-accent-bento hover:bg-blue-700 text-white px-10 py-5 rounded-2xl font-bold text-xl transition-all shadow-xl shadow-blue-200 flex items-center gap-3 mx-auto mb-6",
+                  isLoggingIn && "opacity-75 cursor-wait"
+                )}
               >
-                <UserIcon className="w-6 h-6" />
-                الدخول عبر جوجل للبدء
+                {isLoggingIn ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <UserIcon className="w-6 h-6" />
+                )}
+                {isLoggingIn ? 'جاري التحميل...' : 'الدخول عبر جوجل للبدء'}
               </button>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 max-w-lg mx-auto text-sm text-slate-600">
+                <p className="font-bold mb-1">واجهت مشكلة في الدخول؟</p>
+                <p>تأكد من السماح بالنوافذ المنبثقة (Pop-ups) في متصفحك. إذا استمرت المشكلة، جرب الضغط على أيقونة "فتح في نافذة جديدة" في أعلى يمين المتصفح.</p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
